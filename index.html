@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All-in-One Tools App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom styles for the body and scrollbar */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light grey background */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Styles for all custom modals */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+            padding: 20px; /* Add some padding for smaller screens */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 90%; /* Responsive width */
+            max-width: 400px; /* Max width for larger screens */
+            text-align: center;
+            position: relative;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Calculator specific styles */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .calculator-button {
+            background-color: #e2e8f0; /* bg-slate-200 */
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; /* font-semibold */
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .calculator-button:hover {
+            background-color: #cbd5e1; /* bg-slate-300 */
+        }
+        .calculator-button.operator {
+            background-color: #3b82f6; /* bg-blue-500 */
+            color: white;
+        }
+        .calculator-button.operator:hover {
+            background-color: #2563eb; /* bg-blue-600 */
+        }
+        .calculator-button.clear {
+            background-color: #ef4444; /* bg-red-500 */
+            color: white;
+        }
+        .calculator-button.clear:hover {
+            background-color: #dc2626; /* bg-red-600 */
+        }
+        .calculator-button.equals {
+            background-color: #22c55e; /* bg-green-500 */
+            color: white;
+            grid-column: span 2; /* Make equals button span two columns */
+        }
+        .calculator-button.equals:hover {
+            background-color: #16a34a; /* bg-green-600 */
+        }
+        .calculator-display {
+            background-color: #1e293b; /* bg-slate-800 */
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 2.5rem; /* text-4xl */
+            text-align: right;
+            margin-bottom: 10px;
+            overflow-x: auto; /* Allow horizontal scrolling for long numbers */
+            white-space: nowrap; /* Prevent wrapping */
+        }
+
+        /* Ruler specific styles */
+        .ruler-container {
+            width: 100%;
+            height: 60px; /* Height of the ruler */
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between; /* For distributing marks */
+        }
+
+        .ruler-mark {
+            position: absolute;
+            background-color: #333;
+            bottom: 0;
+            width: 1px;
+        }
+
+        .ruler-mark.cm {
+            height: 30px;
+        }
+
+        .ruler-mark.half-cm {
+            height: 20px;
+        }
+
+        .ruler-mark.mm {
+            height: 10px;
+        }
+
+        .ruler-label {
+            position: absolute;
+            bottom: 35px;
+            font-size: 0.75rem;
+            color: #333;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header Section: Contains app title, menu icon, and gem icon -->
+    <header class="bg-blue-600 p-4 flex items-center justify-between shadow-md rounded-b-lg">
+        <div class="flex items-center">
+            <!-- Menu button -->
+            <button class="text-white text-2xl mr-4 focus:outline-none">
+                <i class="fas fa-bars"></i>
+            </button>
+            <!-- App title -->
+            <h1 class="text-white text-xl font-semibold">Smart Tools Box</h1>
+        </div>
+        <!-- Gem icon -->
+        <div class="text-yellow-300 text-2xl">
+            <i class="fas fa-gem"></i>
+        </div>
+    </header>
+
+    <!-- Search Bar Section: Input field for searching tools -->
+    <div class="p-4 bg-blue-600 pb-8 rounded-b-lg">
+        <div class="relative">
+            <input type="text" placeholder="Search tools here..."
+                   class="w-full py-3 pl-12 pr-4 rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700">
+            <!-- Search icon inside the input field -->
+            <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                <i class="fas fa-search text-gray-400"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area: Contains various tool sections -->
+    <main class="flex-grow p-4 -mt-4">
+        <!-- Quick Tools Section: Top row of tools -->
+        <section class="mb-6">
+            <div class="grid grid-cols-3 gap-4">
+                <!-- Magnifier Tool Card (Non-functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="showToolMessage('Magnifier', 'यह टूल डिवाइस के कैमरे पर निर्भर करता है। वेब ब्राउज़र सुरक्षा कारणों से सीधे कैमरे तक पहुँच नहीं सकते।')">
+                    <div class="bg-orange-100 text-orange-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-search-plus text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Magnifier</span>
+                </div>
+                <!-- Sensors Tool Card (Non-functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="showToolMessage('Sensors', 'यह टूल डिवाइस के आंतरिक सेंसर (जैसे एक्सेलेरोमीटर, जायरोस्कोप) पर निर्भर करता है। वेब ब्राउज़र सुरक्षा कारणों से सीधे इन तक पहुँच नहीं सकते।')">
+                    <div class="bg-pink-100 text-pink-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-wifi text-2xl"></i> <!-- Placeholder icon for sensors -->
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Sensors</span>
+                </div>
+                <!-- Voice Recorder Tool Card (Non-functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="showToolMessage('Voice Recorder', 'यह टूल डिवाइस के माइक्रोफोन तक पहुँच पर निर्भर करता है। वेब ब्राउज़र सुरक्षा कारणों से सीधे माइक्रोफोन तक पहुँच नहीं सकते।')">
+                    <div class="bg-yellow-100 text-yellow-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-microphone-alt text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Voice Recorder</span>
+                </div>
+                <!-- Thermometer Tool Card (Non-functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="showToolMessage('Thermometer', 'यह टूल डिवाइस के तापमान सेंसर पर निर्भर करता है। वेब ब्राउज़र सुरक्षा कारणों से सीधे इन तक पहुँच नहीं सकते।')">
+                    <div class="bg-green-100 text-green-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-thermometer-half text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Thermometer</span>
+                </div>
+                <!-- Pedometer Tool Card (Non-functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="showToolMessage('Pedometer', 'यह टूल डिवाइस के स्टेप सेंसर पर निर्भर करता है। वेब ब्राउज़र सुरक्षा कारणों से सीधे इन तक पहुँच नहीं सकते।')">
+                    <div class="bg-blue-100 text-blue-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-shoe-prints text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Pedometer</span>
+                </div>
+                <!-- BMI Tool Card (Functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="openModal('bmiModal')">
+                    <div class="bg-purple-100 text-purple-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-weight text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">BMI</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Common Tools Section: Other general tools -->
+        <section>
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Common Tools</h2>
+            <div class="grid grid-cols-3 gap-4">
+                <!-- Calculator Tool Card (Functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="openModal('calculatorModal')">
+                    <div class="bg-red-100 text-red-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-calculator text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Calculator</span>
+                </div>
+                <!-- Speedometer Tool Card (Non-functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="showToolMessage('Speedometer', 'यह टूल डिवाइस के GPS या एक्सेलेरोमीटर पर निर्भर करता है। वेब ब्राउज़र सुरक्षा कारणों से सीधे इन तक पहुँच नहीं सकते।')">
+                    <div class="bg-teal-100 text-teal-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-tachometer-alt text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Speedometer</span>
+                </div>
+                <!-- Unit Converter Tool Card (Functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="openModal('unitConverterModal')">
+                    <div class="bg-indigo-100 text-indigo-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-exchange-alt text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Unit Converter</span>
+                </div>
+                <!-- World Clock Tool Card (Functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="openModal('worldClockModal'); updateWorldClock()">
+                    <div class="bg-gray-100 text-gray-600 rounded-full p-3 mb-2">
+                        <i class="fas fa-globe-americas text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">World Clock</span>
+                </div>
+                <!-- GPS Camera Tool Card (Non-functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="showToolMessage('GPS Camera', 'यह टूल डिवाइस के कैमरे और GPS स्थान पर निर्भर करता है। वेब ब्राउज़र सुरक्षा कारणों से सीधे इन तक पहुँच नहीं सकते।')">
+                    <div class="bg-lime-100 text-lime-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-camera text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">GPS Camera</span>
+                </div>
+                <!-- Stopwatch Tool Card (Functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="openModal('stopwatchModal')">
+                    <div class="bg-amber-100 text-amber-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-stopwatch text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Stopwatch</span>
+                </div>
+                <!-- Weather Tool Card (Non-functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="showToolMessage('Weather', 'यह टूल वास्तविक समय के मौसम डेटा के लिए बाहरी API पर निर्भर करता है। सुरक्षा और गोपनीयता कारणों से, सीधे वेब पेज में API कॉल करना जटिल हो सकता है।')">
+                    <div class="bg-sky-100 text-sky-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-cloud-sun text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Weather</span>
+                </div>
+                <!-- Flashlight Tool Card (Non-functional) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="showToolMessage('Flashlight', 'यह टूल डिवाइस की फ्लैशलाइट तक पहुँच पर निर्भर करता है। वेब ब्राउज़र सुरक्षा कारणों से सीधे फ्लैशलाइट को नियंत्रित नहीं कर सकते।')">
+                    <div class="bg-fuchsia-100 text-fuchsia-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-lightbulb text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Flashlight</span>
+                </div>
+                <!-- Ruler Tool Card (Functional - Visual) -->
+                <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center justify-center text-center transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                     onclick="openModal('rulerModal'); drawRuler()">
+                    <div class="bg-emerald-100 text-emerald-500 rounded-full p-3 mb-2">
+                        <i class="fas fa-ruler-horizontal text-2xl"></i>
+                    </div>
+                    <span class="text-gray-700 text-sm font-medium">Ruler</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Custom Message Box (Generic Modal for non-functional tools) -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('messageModal')">&times;</span>
+            <h3 id="messageModalTitle" class="text-xl font-semibold mb-3 text-gray-800"></h3>
+            <p id="messageModalMessage" class="text-gray-700"></p>
+            <button onclick="closeModal('messageModal')" class="mt-5 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+                ठीक है
+            </button>
+        </div>
+    </div>
+
+    <!-- Calculator Modal -->
+    <div id="calculatorModal" class="modal">
+        <div class="modal-content max-w-sm">
+            <span class="close-button" onclick="closeModal('calculatorModal')">&times;</span>
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800">Calculator</h3>
+            <div class="calculator-display" id="calculatorDisplay">0</div>
+            <div class="calculator-grid">
+                <button class="calculator-button clear" onclick="clearCalculator()">C</button>
+                <button class="calculator-button operator" onclick="appendOperator('/')">/</button>
+                <button class="calculator-button operator" onclick="appendOperator('*')">*</button>
+                <button class="calculator-button operator" onclick="deleteLastChar()"><i class="fas fa-backspace"></i></button>
+
+                <button class="calculator-button" onclick="appendNumber('7')">7</button>
+                <button class="calculator-button" onclick="appendNumber('8')">8</button>
+                <button class="calculator-button" onclick="appendNumber('9')">9</button>
+                <button class="calculator-button operator" onclick="appendOperator('-')">-</button>
+
+                <button class="calculator-button" onclick="appendNumber('4')">4</button>
+                <button class="calculator-button" onclick="appendNumber('5')">5</button>
+                <button class="calculator-button" onclick="appendNumber('6')">6</button>
+                <button class="calculator-button operator" onclick="appendOperator('+')">+</button>
+
+                <button class="calculator-button" onclick="appendNumber('1')">1</button>
+                <button class="calculator-button" onclick="appendNumber('2')">2</button>
+                <button class="calculator-button" onclick="appendNumber('3')">3</button>
+                <button class="calculator-button" onclick="appendNumber('0')">0</button>
+
+                <button class="calculator-button" onclick="appendNumber('.')">.</button>
+                <button class="calculator-button equals" onclick="calculateResult()">=</button>
+            </div>
+            <button onclick="closeModal('calculatorModal')" class="mt-5 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+                बंद करें
+            </button>
+        </div>
+    </div>
+
+    <!-- Stopwatch Modal -->
+    <div id="stopwatchModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('stopwatchModal')">&times;</span>
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800">Stopwatch</h3>
+            <div id="stopwatchDisplay" class="text-5xl font-bold mb-6 text-gray-800">00:00:00</div>
+            <div class="flex justify-center space-x-4">
+                <button onclick="startStopwatch()" class="px-6 py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">
+                    शुरू करें
+                </button>
+                <button onclick="stopStopwatch()" class="px-6 py-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">
+                    रोकें
+                </button>
+                <button onclick="resetStopwatch()" class="px-6 py-3 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-200">
+                    रीसेट करें
+                </button>
+            </div>
+            <button onclick="closeModal('stopwatchModal')" class="mt-5 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+                बंद करें
+            </button>
+        </div>
+    </div>
+
+    <!-- Unit Converter Modal -->
+    <div id="unitConverterModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('unitConverterModal')">&times;</span>
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800">Unit Converter (Celsius to Fahrenheit)</h3>
+            <div class="mb-4">
+                <label for="celsiusInput" class="block text-gray-700 text-sm font-bold mb-2">सेल्सियस (°C):</label>
+                <input type="number" id="celsiusInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="तापमान दर्ज करें">
+            </div>
+            <button onclick="convertCelsiusToFahrenheit()" class="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200">
+                कन्वर्ट करें
+            </button>
+            <div class="mt-4 text-xl font-semibold text-gray-800" id="fahrenheitResult"></div>
+            <button onclick="closeModal('unitConverterModal')" class="mt-5 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+                बंद करें
+            </button>
+        </div>
+    </div>
+
+    <!-- BMI Modal -->
+    <div id="bmiModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('bmiModal')">&times;</span>
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800">BMI Calculator</h3>
+            <div class="mb-4">
+                <label for="weightInput" class="block text-gray-700 text-sm font-bold mb-2">वजन (किलोग्राम में):</label>
+                <input type="number" id="weightInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="उदाहरण: 70">
+            </div>
+            <div class="mb-4">
+                <label for="heightInput" class="block text-gray-700 text-sm font-bold mb-2">ऊंचाई (मीटर में):</label>
+                <input type="number" step="0.01" id="heightInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="उदाहरण: 1.75">
+            </div>
+            <button onclick="calculateBMI()" class="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200">
+                BMI कैलकुलेट करें
+            </button>
+            <div class="mt-4 text-xl font-semibold text-gray-800" id="bmiResult"></div>
+            <button onclick="closeModal('bmiModal')" class="mt-5 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+                बंद करें
+            </button>
+        </div>
+    </div>
+
+    <!-- World Clock Modal -->
+    <div id="worldClockModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('worldClockModal')">&times;</span>
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800">World Clock</h3>
+            <div id="worldClockDisplay" class="text-xl font-semibold text-gray-800">
+                <p>स्थानीय समय: <span id="localTime"></span></p>
+                <p>न्यूयॉर्क: <span id="nyTime"></span></p>
+                <p>लंदन: <span id="londonTime"></span></p>
+                <p>टोक्यो: <span id="tokyoTime"></span></p>
+                <p>दुबई: <span id="dubaiTime"></span></p>
+            </div>
+            <button onclick="closeModal('worldClockModal')" class="mt-5 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+                बंद करें
+            </button>
+        </div>
+    </div>
+
+    <!-- Ruler Modal -->
+    <div id="rulerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('rulerModal')">&times;</span>
+            <h3 class="text-2xl font-semibold mb-4 text-gray-800">Ruler (Visual)</h3>
+            <p class="text-gray-600 text-sm mb-4">यह एक विज़ुअल रूलर है। इसकी सटीकता आपके स्क्रीन के DPI पर निर्भर करती है और यह वास्तविक भौतिक माप के लिए उपयुक्त नहीं हो सकता है।</p>
+            <div id="rulerContainer" class="ruler-container">
+                <!-- Ruler marks will be drawn here by JavaScript -->
+            </div>
+            <button onclick="closeModal('rulerModal')" class="mt-5 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+                बंद करें
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        // --- General Modal Functions ---
+        /**
+         * Opens a specific modal by its ID.
+         * @param {string} modalId - The ID of the modal to open.
+         */
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        /**
+         * Closes a specific modal by its ID.
+         * @param {string} modalId - The ID of the modal to close.
+         */
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            // Specific cleanup for modals if needed
+            if (modalId === 'stopwatchModal') {
+                stopStopwatch(); // Ensure stopwatch stops when modal closes
+            }
+            if (modalId === 'worldClockModal') {
+                clearInterval(worldClockInterval); // Stop updating world clock when modal closes
+            }
+        }
+
+        /**
+         * Displays a custom message box when a non-functional tool is clicked.
+         * @param {string} toolName - The name of the tool that was clicked.
+         * @param {string} message - The specific message explaining why the tool is not functional.
+         */
+        function showToolMessage(toolName, message) {
+            const messageModal = document.getElementById('messageModal');
+            document.getElementById('messageModalTitle').textContent = `${toolName} टूल`;
+            document.getElementById('messageModalMessage').textContent = message;
+            messageModal.style.display = 'flex';
+        }
+
+        // Close any modal if the user clicks outside of it
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                // Find which modal was closed and perform cleanup if necessary
+                const modalId = event.target.id;
+                if (modalId === 'stopwatchModal') {
+                    stopStopwatch();
+                }
+                if (modalId === 'worldClockModal') {
+                    clearInterval(worldClockInterval);
+                }
+            }
+        }
+
+        // --- Calculator Logic ---
+        let currentInput = '0';
+        let operator = null;
+        let previousInput = '';
+        const calculatorDisplay = document.getElementById('calculatorDisplay');
+
+        /**
+         * Updates the calculator display.
+         */
+        function updateDisplay() {
+            calculatorDisplay.textContent = currentInput;
+        }
+
+        /**
+         * Appends a number to the current input.
+         * @param {string} number - The number string to append.
+         */
+        function appendNumber(number) {
+            if (currentInput === '0' && number !== '.') {
+                currentInput = number;
+            } else if (number === '.' && currentInput.includes('.')) {
+                return; // Prevent multiple decimal points
+            } else {
+                currentInput += number;
+            }
+            updateDisplay();
+        }
+
+        /**
+         * Appends an operator to the calculation.
+         * @param {string} op - The operator string (+, -, *, /).
+         */
+        function appendOperator(op) {
+            if (operator && previousInput !== '') {
+                calculateResult(); // Calculate previous operation if exists
+            }
+            operator = op;
+            previousInput = currentInput;
+            currentInput = '0'; // Reset current input for next number
+            updateDisplay(); // Show previous input for clarity
+        }
+
+        /**
+         * Performs the calculation based on the current inputs and operator.
+         */
+        function calculateResult() {
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            if (isNaN(prev) || isNaN(current)) return;
+
+            switch (operator) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        currentInput = 'Error'; // Handle division by zero
+                        updateDisplay();
+                        return;
+                    }
+                    result = prev / current;
+                    break;
+                default:
+                    return;
+            }
+            currentInput = result.toString();
+            operator = null;
+            previousInput = '';
+            updateDisplay();
+        }
+
+        /**
+         * Clears the calculator display and resets all values.
+         */
+        function clearCalculator() {
+            currentInput = '0';
+            operator = null;
+            previousInput = '';
+            updateDisplay();
+        }
+
+        /**
+         * Deletes the last character from the current input.
+         */
+        function deleteLastChar() {
+            currentInput = currentInput.slice(0, -1);
+            if (currentInput === '') {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        // --- Stopwatch Logic ---
+        let stopwatchInterval;
+        let startTime;
+        let elapsedTime = 0;
+        let isRunning = false;
+        const stopwatchDisplay = document.getElementById('stopwatchDisplay');
+
+        /**
+         * Formats time in milliseconds to HH:MM:SS format.
+         * @param {number} ms - Time in milliseconds.
+         * @returns {string} Formatted time string.
+         */
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        /**
+         * Starts or resumes the stopwatch.
+         */
+        function startStopwatch() {
+            if (!isRunning) {
+                isRunning = true;
+                startTime = Date.now() - elapsedTime;
+                stopwatchInterval = setInterval(() => {
+                    elapsedTime = Date.now() - startTime;
+                    stopwatchDisplay.textContent = formatTime(elapsedTime);
+                }, 1000); // Update every second
+            }
+        }
+
+        /**
+         * Stops the stopwatch.
+         */
+        function stopStopwatch() {
+            if (isRunning) {
+                isRunning = false;
+                clearInterval(stopwatchInterval);
+            }
+        }
+
+        /**
+         * Resets the stopwatch to zero.
+         */
+        function resetStopwatch() {
+            stopStopwatch(); // Stop if running
+            elapsedTime = 0;
+            stopwatchDisplay.textContent = formatTime(elapsedTime);
+        }
+
+        // --- Unit Converter Logic (Celsius to Fahrenheit) ---
+        const celsiusInput = document.getElementById('celsiusInput');
+        const fahrenheitResult = document.getElementById('fahrenheitResult');
+
+        /**
+         * Converts Celsius temperature to Fahrenheit.
+         */
+        function convertCelsiusToFahrenheit() {
+            const celsius = parseFloat(celsiusInput.value);
+            if (isNaN(celsius)) {
+                fahrenheitResult.textContent = 'कृपया एक मान्य संख्या दर्ज करें।';
+                return;
+            }
+            const fahrenheit = (celsius * 9/5) + 32;
+            fahrenheitResult.textContent = `${celsius}°C = ${fahrenheit.toFixed(2)}°F`;
+        }
+
+        // --- BMI Calculator Logic ---
+        const weightInput = document.getElementById('weightInput');
+        const heightInput = document.getElementById('heightInput');
+        const bmiResult = document.getElementById('bmiResult');
+
+        /**
+         * Calculates BMI based on weight (kg) and height (m).
+         */
+        function calculateBMI() {
+            const weight = parseFloat(weightInput.value);
+            const height = parseFloat(heightInput.value);
+
+            if (isNaN(weight) || isNaN(height) || height <= 0 || weight <= 0) {
+                bmiResult.textContent = 'कृपया मान्य वजन और ऊंचाई दर्ज करें।';
+                bmiResult.className = 'mt-4 text-red-600 text-xl font-semibold';
+                return;
+            }
+
+            const bmi = weight / (height * height);
+            let category = '';
+
+            if (bmi < 18.5) {
+                category = 'कम वजन (Underweight)';
+                bmiResult.className = 'mt-4 text-orange-600 text-xl font-semibold';
+            } else if (bmi >= 18.5 && bmi < 24.9) {
+                category = 'सामान्य वजन (Normal weight)';
+                bmiResult.className = 'mt-4 text-green-600 text-xl font-semibold';
+            } else if (bmi >= 25 && bmi < 29.9) {
+                category = 'अधिक वजन (Overweight)';
+                bmiResult.className = 'mt-4 text-orange-600 text-xl font-semibold';
+            } else {
+                category = 'मोटापा (Obesity)';
+                bmiResult.className = 'mt-4 text-red-600 text-xl font-semibold';
+            }
+
+            bmiResult.textContent = `आपका BMI: ${bmi.toFixed(2)} (${category})`;
+        }
+
+        // --- World Clock Logic ---
+        let worldClockInterval;
+
+        /**
+         * Updates the world clock display for various time zones.
+         */
+        function updateWorldClock() {
+            const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+
+            const localTime = new Date().toLocaleTimeString('en-US', options);
+            document.getElementById('localTime').textContent = localTime;
+
+            // New York (America/New_York)
+            const nyTime = new Date().toLocaleTimeString('en-US', { ...options, timeZone: 'America/New_York' });
+            document.getElementById('nyTime').textContent = nyTime;
+
+            // London (Europe/London)
+            const londonTime = new Date().toLocaleTimeString('en-US', { ...options, timeZone: 'Europe/London' });
+            document.getElementById('londonTime').textContent = londonTime;
+
+            // Tokyo (Asia/Tokyo)
+            const tokyoTime = new Date().toLocaleTimeString('en-US', { ...options, timeZone: 'Asia/Tokyo' });
+            document.getElementById('tokyoTime').textContent = tokyoTime;
+
+            // Dubai (Asia/Dubai)
+            const dubaiTime = new Date().toLocaleTimeString('en-US', { ...options, timeZone: 'Asia/Dubai' });
+            document.getElementById('dubaiTime').textContent = dubaiTime;
+        }
+
+        // Start updating the clock every second when modal is opened
+        // This is handled by the onclick event on the tool card itself.
+        // When the modal is closed, the interval is cleared in closeModal.
+
+        // --- Ruler Logic (Visual Simulation) ---
+        const rulerContainer = document.getElementById('rulerContainer');
+
+        /**
+         * Draws centimeter and millimeter marks on the visual ruler.
+         */
+        function drawRuler() {
+            rulerContainer.innerHTML = ''; // Clear previous marks
+
+            // Get the actual width of the ruler container in pixels
+            const containerWidthPx = rulerContainer.offsetWidth;
+            // Assuming 1 cm is roughly 37.795 pixels for a standard 96 DPI screen.
+            // This is an approximation and will vary by screen.
+            const pixelsPerCm = 37.795; // Standard 96 DPI conversion (1 inch = 2.54 cm, 96 pixels/inch)
+
+            const totalCm = Math.floor(containerWidthPx / pixelsPerCm);
+
+            for (let i = 0; i <= totalCm; i++) {
+                // Centimeter mark
+                const cmMark = document.createElement('div');
+                cmMark.className = 'ruler-mark cm';
+                cmMark.style.left = `${i * pixelsPerCm}px`;
+                rulerContainer.appendChild(cmMark);
+
+                // Centimeter label
+                const cmLabel = document.createElement('span');
+                cmLabel.className = 'ruler-label';
+                cmLabel.style.left = `${i * pixelsPerCm}px`;
+                cmLabel.textContent = i;
+                rulerContainer.appendChild(cmLabel);
+
+                // Millimeter marks (9 marks between each cm)
+                if (i < totalCm) {
+                    for (let j = 1; j < 10; j++) {
+                        const mmMark = document.createElement('div');
+                        mmMark.className = 'ruler-mark mm';
+                        if (j === 5) {
+                            mmMark.classList.add('half-cm'); // Half-centimeter mark is longer
+                        }
+                        mmMark.style.left = `${(i * pixelsPerCm) + (j * (pixelsPerCm / 10))}px`;
+                        rulerContainer.appendChild(mmMark);
+                    }
+                }
+            }
+        }
+
+        // Redraw ruler on window resize to adjust to new container width
+        window.addEventListener('resize', () => {
+            if (rulerModal.style.display === 'flex') { // Only redraw if modal is open
+                drawRuler();
+            }
+        });
+    </script>
+</body>
+</html>
